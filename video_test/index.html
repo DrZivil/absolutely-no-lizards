@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<head>
+    <link href="http://vjs.zencdn.net/5.10.7/video-js.css" rel="stylesheet">
+
+    <!-- If you'd like to support IE8 -->
+    <script src="http://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js"></script>
+
+</head>
+
+        <!--- https://css-tricks.com/glitch-effect-text-images-svg/ -->
+
+<body>
+<style>
+    h1{
+        position: absolute;
+        top: 280px;
+        left: 215px;
+        color: white;
+        font-family: arial;
+    }
+    body{
+        position: relative;
+        background: #000000;
+    }
+    html, body{
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    .video-js{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;;
+    }
+    .powerbar-container{
+        position: absolute;
+        z-index: 99;
+        right: 15px;
+        bottom: 2%;
+        height: 96%;
+        opacity: 0;
+    }
+    .powerbar{
+        border: 2px solid #ffffff;
+        position: relative;
+        width: 20px;
+        height: 100%;
+        background: red;
+    }
+    .powerbar .energy{
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        top: 0;
+        left: 0;
+        background: greenyellow;
+        -webkit-transform-origin: 50% 100%; /* Chrome, Safari, Opera */
+        transform-origin: 50% 100%;
+    }
+</style>
+<div class="powerbar-container">
+    <div class="powerbar">
+        <div class="energy"></div>
+    </div>
+</div>
+<video id="my-video" class="video-js" controls preload="auto" width="640" height="264"
+       poster="http://www.placehold.it/800x600" data-setup="{}">
+    <source src="/video/lizardTVEidechser.mp4" type='video/mp4'>
+    <p class="vjs-no-js">
+        To view this video please enable JavaScript, and consider upgrading to a web browser that
+        <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+    </p>
+</video>
+<video id="my-video-2" class="video-js" controls preload="auto" width="640" height="264"
+       poster="http://www.placehold.it/800x600" data-setup="{}">
+    <source src="/video/lizardTV1_mensch.mp4" type='video/mp4'>
+    <p class="vjs-no-js">
+        To view this video please enable JavaScript, and consider upgrading to a web browser that
+        <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+    </p>
+</video>
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script src="http://vjs.zencdn.net/5.10.7/video.js"></script>
+<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+<script>
+    // socket io
+
+    var socket = io();
+    var energy;
+
+
+    var player1 = videojs('my-video', {"controls": false, "loop": true});
+    var player2 = videojs('my-video-2', {"controls": false, "loop": true});
+    player1.play();
+    player2.play();
+
+    socket.on('curr energy', function(val){
+        energy = val;
+        updateEnergy(val);
+    });
+
+    function updateEnergy(val){
+        var opacity = val;
+//        console.log(event.which, "opacity: ", opacity);
+        $('#my-video-2').css("opacity", opacity);
+        $('.energy').css({
+            '-webkit-transform' : 'scaleY(' + opacity + ')',
+            '-moz-transform'    : 'scaleY(' + opacity + ')',
+            '-ms-transform'     : 'scaleY(' + opacity + ')',
+            '-o-transform'      : 'scaleY(' + opacity + ')',
+            'transform'         : 'scaleY(' + opacity + ')'
+        });
+    }
+
+    // check status of energy and show bar according
+    setInterval(function(){
+//        console.log(energy);
+        if(energy < 0.9 && energy != undefined){
+            $('.powerbar-container').css('opacity', 1 - energy + 0.1);
+        }
+    }, 100);
+</script>
+</body>
+</html>
