@@ -5,6 +5,8 @@ using System.IO.Ports;
 using SocketIO;
 using WiimoteApi;
 
+using UnityEngine.SceneManagement;
+
 public class EnergyBar : MonoBehaviour
     {
 
@@ -14,8 +16,12 @@ public class EnergyBar : MonoBehaviour
     public GameObject MoneyReaderEnergyBar;
     public GameObject ControllerEnergyBar;
     public GameObject FakeStreetEnergyBar;
+    public GameObject BeatEmUpEnergyBar;
 
     public GameObject FakeWiiEnergyBar;
+
+    public GameObject resetButton;
+
 
     public bool streetFighterActive = false;
 
@@ -51,12 +57,12 @@ public class EnergyBar : MonoBehaviour
 
     private SocketIOComponent socket;
 
-    // variable for Slow Opdate Time [ms];
-    private float nextUpdate = 300;
+    // variable for Slow Opdate Time [s];
+    private float nextUpdate = 0.1f;
 
     // Use this for initialization
     void Start ()
-    {
+    { 
         InitWiimotes();
 
         InitSocketIO();
@@ -69,6 +75,11 @@ public class EnergyBar : MonoBehaviour
         GameObject curr_slave_bg = curr_slave_bar.GetComponent<EnergyBarRiddle>().border;
         curr_slave_bg.GetComponent<Image>().color = Color.white;
         energyBar.transform.localScale = new Vector3(this.transform.localScale.x, curr_energy, this.transform.localScale.z);
+    }
+
+    public void RestartLevel()
+    {
+        SceneManager.LoadScene("Lizard Interface", LoadSceneMode.Single);
     }
 
 
@@ -97,11 +108,15 @@ public class EnergyBar : MonoBehaviour
     {
         if (!gameOver)
         {
-            if(Time.time > nextUpdate)
-            {
-                slowUpdate();
-                nextUpdate = Time.time + nextUpdate;
-            }
+
+            socketEvents();
+            //Debug.Log("time: " + Time.time);
+            //if (Time.time > nextUpdate)
+            //{
+            //    slowUpdate();
+            //    Debug.Log("next update: " + nextUpdate);
+            //    nextUpdate = Time.time + nextUpdate;
+            //}
 
             keyEvents();
             ArduinoEvents();
@@ -110,6 +125,7 @@ public class EnergyBar : MonoBehaviour
             {
                 gameOver = true;
                 Debug.Log("Game over Bro");
+                resetButton.SetActive(true);
                 OnApplicationQuit();
             }
         }
@@ -246,10 +262,7 @@ public class EnergyBar : MonoBehaviour
             {
                 int mappingNr = sp.ReadByte();
 
-                    Debug.Log(mappingNr);
-                if(mappingNr != 40)
-                {
-                }
+                   // Debug.Log(mappingNr);
 
                 if (mappingNr == 8 && Time.time > nextFireTV)
                  {
@@ -319,6 +332,24 @@ public class EnergyBar : MonoBehaviour
             slaveEnergyBars[slave_index].GetComponent<EnergyBarRiddle>().isActive = true;
             slaveEnergyBars[slave_index].GetComponent<EnergyBarRiddle>().setEnergyBar();
             slaveEnergyBars[slave_index].GetComponent<EnergyBarRiddle>().background.GetComponent<Image>().color = slaveEnergyBars[slave_index].GetComponent<EnergyBarRiddle>().activeBar;
+
+
+            // causal beat em up stuff
+            //Debug.Log(slaveEnergyBars[slave_index].transform.name);
+            if (slaveEnergyBars[slave_index].transform.name == "Slave Energybar - Beat em up")
+            {
+
+                BeatEmUpEnergyBar.GetComponent<EnergyBarRiddle>().energyBar.transform.localScale = new Vector3(this.transform.localScale.x, stage, this.transform.localScale.z);
+                BeatEmUpEnergyBar.GetComponent<EnergyBarRiddle>().isActive = true;
+                BeatEmUpEnergyBar.GetComponent<EnergyBarRiddle>().setEnergyBar();
+                BeatEmUpEnergyBar.GetComponent<EnergyBarRiddle>().background.GetComponent<Image>().color = slaveEnergyBars[slave_index].GetComponent<EnergyBarRiddle>().activeBar;
+
+                GameObject lizzard = GameObject.Find("Lizzard");
+                lizzard.GetComponent<lizzardMovement>().damage = false;
+                lizzard.GetComponent<lizzardMovement>().dead = false;
+                lizzard.GetComponent<damageScript>().lizardLife = stage;
+                lizzard.transform.root.GetComponentInChildren<Animator>().SetTrigger("Spawn");
+            }
 
             // print("curr Energy[arduino]: " + slaveEnergyBars[number].GetComponent<EnergyBarRiddle>().getCurrEnergy());
             // print("isActive[arduino]: " + slaveEnergyBars[number].GetComponent<EnergyBarRiddle>().isActive);
@@ -423,32 +454,20 @@ public class EnergyBar : MonoBehaviour
             {
                 new_energy = 1;
             }
+
+            Debug.Log(curr_slave_bar.transform.name); //todo -> figure out why this does not work
+            if (curr_slave_bar.transform.name == "Slave Energybar - Beat em up" && curr_slave_bar.GetComponent<EnergyBarRiddle>().isActive)
+            {
+                BeatEmUpEnergyBar.GetComponent<EnergyBarRiddle>().setCurrEnergy(new_energy);
+                BeatEmUpEnergyBar.GetComponent<EnergyBarRiddle>().energyBar.transform.localScale = new Vector3(this.transform.localScale.x, new_energy, this.transform.localScale.z);
+            }
+
             if (curr_slave_bar.GetComponent<EnergyBarRiddle>().isActive)
             {
                 curr_slave_bar.GetComponent<EnergyBarRiddle>().setCurrEnergy(new_energy);
-                if(curr_slave_bar.transform.name == "Slave Energybar - Beat em up")
-                {
-                    GameObject beat_em_up_bar = GameObject.Find("Slave Energybar - Beat em up 2");
-                    beat_em_up_bar.GetComponent<EnergyBarRiddle>().setCurrEnergy(new_energy);
-                    Debug.Log(curr_slave_bar.transform);
-                    Debug.Log(beat_em_up_bar.transform);
-                    beat_em_up_bar.GetComponent<EnergyBarRiddle>().energyBar.transform.localScale = new Vector3(this.transform.localScale.x, new_energy, this.transform.localScale.z);
-                }
                 print("curr Energy[keys]: " + curr_slave_bar.GetComponent<EnergyBarRiddle>().getCurrEnergy());
                 curr_slave_energy.transform.localScale = new Vector3(this.transform.localScale.x, new_energy, this.transform.localScale.z);
             }
-        }
-
-
-        // todo: put in sp events and adapt after arduino is connected - allso give lizzard new energy als lizardLife
-        if (Input.GetKeyDown(KeyCode.PageUp))
-        {
-            GameObject lizzard = GameObject.Find("Lizzard");
-            lizzard.GetComponent<lizzardMovement>().damage = false;
-            lizzard.GetComponent<lizzardMovement>().dead = false;
-            lizzard.transform.root.GetComponentInChildren<Animator>().SetTrigger("Spawn");
-            switchBars(1);
-            ActivateBarNumber(3);
         }
     }
 }
