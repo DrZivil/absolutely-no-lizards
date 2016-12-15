@@ -5,5 +5,6 @@
 # Plugins/Resources:
 
 Midi:
-    [Launchpad Coding Reference]https://d19ulaff0trnck.cloudfront.net/sites/default/files/novation/downloads/4080/launchpad-programmers-reference.pdf
-    https://code.google.com/archive/p/midi-dot-net/
+    [Launchpad Coding Reference](https://drzivil.github.io/absolutely-no-lizards/launchpad-programmers-reference.pdf)
+    [Midi .net](https://code.google.com/archive/p/midi-dot-net/)
+    [Midi .net Doku](https://drzivil.github.io/absolutely-no-lizards/)
