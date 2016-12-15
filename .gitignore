@@ -1,9 +1,10 @@
 video_test/node_modules/
-ANL-Combined/Library/metadata/
 video_test/.idea/
 ANL-Combined/build/
-ANL-Combined/Library/ShaderCache/
 ANL-Combined/Assets/sfg/Orc Warrior/
 video_test/public/video/lizardTV1_mensch.mp4
 video_test/public/video/lizardTVEidechser.mp4
 ANL-Combined/Temp/
+ANL-Combined/Library/
+ANL-Combined/ProjectSettings/
+ANL-Combined/.vs/
