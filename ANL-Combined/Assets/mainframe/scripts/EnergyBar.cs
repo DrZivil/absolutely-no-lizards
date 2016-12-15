@@ -166,8 +166,11 @@ public class EnergyBar : MonoBehaviour
         // todo activate when arduino is connected 
         //int mappingNr = sp.ReadByte();
         float currEnergy = GameObject.Find("Slave Energybar - TV").transform.GetComponent<EnergyBarRiddle>().getCurrEnergy();
+        float currEnergyPic = GameObject.Find("Slave Energybar - Picture Frame").transform.GetComponent<EnergyBarRiddle>().getCurrEnergy();
+        JSONObject currEnergyPicJson = new JSONObject(currEnergyPic);
         JSONObject currEnergyJson = new JSONObject(currEnergy);
         socket.Emit("curr energy", currEnergyJson);
+        socket.Emit("curr energy pic", currEnergyPicJson);
     }
 
     void ConnectArduino()
