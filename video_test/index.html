@@ -120,6 +120,9 @@
         energy = val;
         updateEnergy(val);
     });
+	socket.on('curr energy pic', function(val){
+        console.log(val);
+    });
 
     function updateEnergy(val){
         var opacity = val;

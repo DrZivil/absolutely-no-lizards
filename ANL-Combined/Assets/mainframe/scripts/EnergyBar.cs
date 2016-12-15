@@ -169,6 +169,7 @@ public class EnergyBar : MonoBehaviour
         float currEnergyPic = GameObject.Find("Slave Energybar - Picture Frame").transform.GetComponent<EnergyBarRiddle>().getCurrEnergy();
         JSONObject currEnergyPicJson = new JSONObject(currEnergyPic);
         JSONObject currEnergyJson = new JSONObject(currEnergy);
+        Debug.Log("Socket Events");
         socket.Emit("curr energy", currEnergyJson);
         socket.Emit("curr energy pic", currEnergyPicJson);
     }

@@ -22,6 +22,9 @@ io.on('connection', function(socket){
     socket.on('curr energy', function(msg){
         io.emit('curr energy', msg);
     });
+	socket.on('curr energy pic', function(msg){
+        io.emit('curr energy pic', msg);
+    });
     socket.on('energy up', function(msg){
         io.emit('energy up', msg);
     });
