@@ -1,6 +1,8 @@
 # Absolutely no Lizards
 
+# Launchpad Mapper
 
+Doku für Launchpad Mapper (den ma noch schreiben müssen) hier einfügen.
 
 # Plugins/Resources:
 
