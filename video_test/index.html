@@ -123,8 +123,9 @@
 	socket.on('curr energy pic', function(val){
         console.log(val);
     });
-    socket.on('franz', function(val){
-        console.log("franz");
+    socket.on('hide bars', function(val){
+        $('.powerbar-container').css('opacity', 0);
+        barShown = false;
     });
 
     function updateEnergy(val){

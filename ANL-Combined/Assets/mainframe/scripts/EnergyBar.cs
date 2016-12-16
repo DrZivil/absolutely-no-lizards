@@ -4,6 +4,12 @@ using UnityEngine.UI;
 using System.IO.Ports;
 using SocketIO;
 
+// Input
+using MidiJack;
+
+// output
+using Midi;
+
 using UnityEngine.SceneManagement;
 
 public class EnergyBar : MonoBehaviour
@@ -62,17 +68,33 @@ public class EnergyBar : MonoBehaviour
     // variable for Slow Opdate Time [s];
     private float nextUpdate = 0.1f;
 
+    private float lastEmit;
+    public float emitRate = 0.2f;
+
+    // Coroutines for emitting
+    private IEnumerator emitPictureFrame;
+
+    private int green = 60;
+    private int red = 15;
+    private int amber = 63;
+    private int yellow = 62;
+    private int off = 0;
+
+
+    OutputDevice outputDevice;
+
     // Use this for initialization
     void Start()
     {
         Debug.Log("init Stuff");
-        string test = "42";
-        Debug.Log(test);
-        float testFloat = float.Parse(test);
-        Debug.Log(testFloat);
-
         GameObject go = GameObject.Find("SocketIO");
         socket = go.GetComponent<SocketIOComponent>();
+
+        outputDevice = OutputDevice.InstalledDevices[1];
+        if (outputDevice.IsOpen) outputDevice.Close();
+        if (!outputDevice.IsOpen) outputDevice.Open();
+
+        LightLaunchpad();
 
         SocketIOListeners();
 
@@ -87,11 +109,21 @@ public class EnergyBar : MonoBehaviour
         energyBar.transform.localScale = new Vector3(this.transform.localScale.x, curr_energy, this.transform.localScale.z);
     }
 
+    public void LightLaunchpad()
+    {
+        outputDevice.SendNoteOn(Channel.Channel1, Pitch.CNeg1, yellow);
+        outputDevice.SendNoteOn(Channel.Channel1, Pitch.CSharpNeg1, yellow);
+        outputDevice.SendNoteOn(Channel.Channel1, Pitch.DNeg1, yellow);
+        outputDevice.SendNoteOn(Channel.Channel1, Pitch.DSharpNeg1, yellow);
+    }
+
     public void SocketIOListeners()
     {
         socket.On("start game", StartGame);
         socket.On("reset game", ResetGame);
         socket.On("update", updateVariables);
+
+        socket.On("shake pic", DecreasePicEnergy);
     }
 
     public void StartGame(SocketIOEvent e)
@@ -103,12 +135,23 @@ public class EnergyBar : MonoBehaviour
     public void ResetGame(SocketIOEvent e)
     {
         Debug.Log("Reset Game");
+        gameStarted = false;
+        SetFullEnergyToClients();
         SceneManager.LoadScene("Lizard Interface", LoadSceneMode.Single);
     }
 
     public void RestartLevel()
     {
         SceneManager.LoadScene("Lizard Interface", LoadSceneMode.Single);
+    }
+
+    public void DecreasePicEnergy(SocketIOEvent e)
+    {
+        if (gameStarted)
+        {
+            Debug.Log("Decrease Pic Energy");
+            FakeWiiEnergyBar.GetComponent<EnergyBarRiddle>().setEnergyBarManual();
+        }
     }
 
     private void updateVariables(SocketIOEvent e)
@@ -126,7 +169,7 @@ public class EnergyBar : MonoBehaviour
         FakeStreetEnergyBar.GetComponent<EnergyBarRiddle>().decreaseAmountManual = getFloat(e.data["activeBEU"].ToString()) / gameMasterToGameRatioActive;
         BeatEmUpEnergyBar.GetComponent<EnergyBarRiddle>().decreaseAmount = getFloat(e.data["passiveBEU"].ToString()) / gameMasterToGameRatio;
         BeatEmUpEnergyBar.GetComponent<EnergyBarRiddle>().decreaseAmountManual = getFloat(e.data["activeBEU"].ToString()) / gameMasterToGameRatioActive;
-        main_charge_rate = getFloat(e.data["lizardCharge"].ToString()) / 1000;
+        main_charge_rate = getFloat(e.data["lizardCharge"].ToString()) / 500;
     }
 
     public float getFloat(string str)
@@ -140,11 +183,18 @@ public class EnergyBar : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+        keyColorEvents();
+
         //Debug.Log(gameStarted);
         if (!gameOver && gameStarted)
         {
 
-            //socketEvents();
+            if(Time.time > emitRate + lastEmit)
+            {
+                socketEvents();
+                lastEmit = Time.time;
+            }
 
             keyEvents();
             //ArduinoEvents();
@@ -160,17 +210,33 @@ public class EnergyBar : MonoBehaviour
         }
     }
 
+    void SetFullEnergyToClients()
+    {
+        JSONObject currEnergyPicJson = new JSONObject(1);
+        JSONObject currEnergyJson = new JSONObject(1);
+        socket.Emit("curr energy pic", currEnergyPicJson);
+        socket.Emit("hide bars");
+        socket.Emit("curr energy", currEnergyJson);
+    }
+
     void socketEvents()
     {
-        // todo activate when arduino is connected 
-        //int mappingNr = sp.ReadByte();
-        float currEnergy = GameObject.Find("Slave Energybar - TV").transform.GetComponent<EnergyBarRiddle>().getCurrEnergy();
-        float currEnergyPic = GameObject.Find("Slave Energybar - Picture Frame").transform.GetComponent<EnergyBarRiddle>().getCurrEnergy();
-        JSONObject currEnergyPicJson = new JSONObject(currEnergyPic);
+        float currEnergy = TVRemoteEnergyBar.GetComponent<EnergyBarRiddle>().getCurrEnergy();
         JSONObject currEnergyJson = new JSONObject(currEnergy);
-        //Debug.Log("Socket Events");
         socket.Emit("curr energy", currEnergyJson);
-        socket.Emit("curr energy pic", currEnergyPicJson);
+
+
+        emitPictureFrame = WaitAndEmitPictureFrame(0.1f);
+        StartCoroutine(emitPictureFrame);
+    }
+
+    private IEnumerator WaitAndEmitPictureFrame(float waitTime)
+    {
+        Debug.Log("emit energy pictureframe");
+        yield return new WaitForSeconds(waitTime);
+        float currEnergyPic = FakeWiiEnergyBar.GetComponent<EnergyBarRiddle>().getCurrEnergy();
+        JSONObject currEnergyPicJson = new JSONObject(currEnergyPic);
+        socket.Emit("pic energy", currEnergyPicJson);
     }
 
     void ConnectArduino()
@@ -193,7 +259,50 @@ public class EnergyBar : MonoBehaviour
 
     void OnApplicationQuit()
     {
+        outputDevice.SendNoteOn(Channel.Channel1, Pitch.CNeg1, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, Pitch.CSharpNeg1, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, Pitch.DNeg1, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, Pitch.DSharpNeg1, 0);
+
+
+        if (outputDevice.IsOpen) outputDevice.Close();
         sp.Close();
+    }
+
+    public void keyColorEvents()
+    {
+        if (MidiMaster.GetKeyUp(0))
+        {
+            outputDevice.SendNoteOn(Channel.Channel1, Pitch.CNeg1, yellow);
+        }
+        if (MidiMaster.GetKeyUp(1))
+        {
+            outputDevice.SendNoteOn(Channel.Channel1, Pitch.CSharpNeg1, yellow);
+        }
+        if (MidiMaster.GetKeyUp(2))
+        {
+            outputDevice.SendNoteOn(Channel.Channel1, Pitch.DNeg1, yellow);
+        }
+        if (MidiMaster.GetKeyUp(3))
+        {
+            outputDevice.SendNoteOn(Channel.Channel1, Pitch.DSharpNeg1, yellow);
+        }
+        if (MidiMaster.GetKeyDown(0))
+        {
+            outputDevice.SendNoteOn(Channel.Channel1, Pitch.CNeg1, green);
+        }
+        if (MidiMaster.GetKeyDown(1))
+        {
+            outputDevice.SendNoteOn(Channel.Channel1, Pitch.CSharpNeg1, green);
+        }
+        if (MidiMaster.GetKeyDown(2))
+        {
+            outputDevice.SendNoteOn(Channel.Channel1, Pitch.DNeg1, green);
+        }
+        if (MidiMaster.GetKeyDown(3))
+        {
+            outputDevice.SendNoteOn(Channel.Channel1, Pitch.DSharpNeg1, green);
+        }
     }
 
     public bool oneBarDown()
@@ -396,7 +505,8 @@ public class EnergyBar : MonoBehaviour
         */
 
         // Load Main Energy Bar
-        if (Input.GetKeyDown(KeyCode.Space) && !oneBarDown())
+        //if (Input.GetKeyDown(KeyCode.Space) && !oneBarDown())
+        if (MidiMaster.GetKeyDown(0) && !oneBarDown())
         {
             float currScaleY = energyBar.transform.localScale.y + main_charge_rate;
             if (currScaleY > 1)
@@ -407,7 +517,8 @@ public class EnergyBar : MonoBehaviour
         }
 
         // Switch through Energy Bars to charge
-        if (Input.GetKeyDown(KeyCode.Tab))
+        //if (Input.GetKeyDown(KeyCode.Tab))
+        if (MidiMaster.GetKeyDown(1))
         {
             slave_index = (slave_index + 1) % slaveEnergyBars.Length;
             int j = 0;
@@ -439,7 +550,8 @@ public class EnergyBar : MonoBehaviour
         }
 
         // Charge selected Energy Bar
-        if (Input.GetKeyDown(KeyCode.LeftShift) && curr_slave_bar.GetComponent<EnergyBarRiddle>().isActive)
+        //if (Input.GetKeyDown(KeyCode.LeftShift) && curr_slave_bar.GetComponent<EnergyBarRiddle>().isActive)
+        if (MidiMaster.GetKeyDown(2) && curr_slave_bar.GetComponent<EnergyBarRiddle>().isActive)
         {
             GameObject curr_slave_energy = curr_slave_bar.GetComponent<EnergyBarRiddle>().energyBar;
             float new_energy = curr_slave_energy.transform.localScale.y + energyBar.transform.localScale.y;

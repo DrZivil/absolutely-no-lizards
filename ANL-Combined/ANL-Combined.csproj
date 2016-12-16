@@ -61,12 +61,24 @@
     <Reference Include="UnityEditor">
       <HintPath>Library\UnityAssemblies\UnityEditor.dll</HintPath>
     </Reference>
+    <Reference Include="Midi">
+      <HintPath>Assets\midi-dot-net_1.1.0\Midi.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\2dFight\script\damageScript.cs" />
     <Compile Include="Assets\2dFight\script\lizzardLife.cs" />
     <Compile Include="Assets\2dFight\script\lizzardMovement.cs" />
     <Compile Include="Assets\2dFight\script\umanMovement.cs" />
+    <Compile Include="Assets\MidiJack-master\Assets\Example CC\KnobIndicator.cs" />
+    <Compile Include="Assets\MidiJack-master\Assets\Example CC\KnobIndicatorGroup.cs" />
+    <Compile Include="Assets\MidiJack-master\Assets\Example Delegate\DelegateTester.cs" />
+    <Compile Include="Assets\MidiJack-master\Assets\Example Note\NoteIndicator.cs" />
+    <Compile Include="Assets\MidiJack-master\Assets\Example Note\NoteIndicatorGroup.cs" />
+    <Compile Include="Assets\MidiJack-master\Assets\MidiJack\Midi.cs" />
+    <Compile Include="Assets\MidiJack-master\Assets\MidiJack\MidiDriver.cs" />
+    <Compile Include="Assets\MidiJack-master\Assets\MidiJack\MidiMaster.cs" />
+    <Compile Include="Assets\MidiJack-master\Assets\MidiJack\MidiStateUpdater.cs" />
     <Compile Include="Assets\SocketIO\JSONObject\JSONObject.cs" />
     <Compile Include="Assets\SocketIO\JSONObject\JSONTemplates.cs" />
     <Compile Include="Assets\SocketIO\JSONObject\VectorTemplates.cs" />
@@ -209,8 +221,11 @@
     <Compile Include="Assets\sfg\Standard Assets\Utility\WaypointProgressTracker.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\MidiJack-master\ProjectSettings\ProjectVersion.txt" />
     <None Include="Assets\SocketIO\JSONObject\readme.txt" />
     <None Include="Assets\SocketIO\Readme.txt" />
+    <None Include="Assets\midi-dot-net_1.1.0\Midi.xml" />
+    <None Include="Assets\midi-dot-net_1.1.0\README.txt" />
     <None Include="Assets\sfg\Standard Assets\CrossPlatformInput\CrossPlatformInputGuidelines.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

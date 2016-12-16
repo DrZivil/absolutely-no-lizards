@@ -97,6 +97,9 @@
     <Reference Include="UnityEditor.LinuxStandalone.Extensions">
       <HintPath>Library\UnityAssemblies\UnityEditor.LinuxStandalone.Extensions.dll</HintPath>
     </Reference>
+    <Reference Include="Midi">
+      <HintPath>Assets\midi-dot-net_1.1.0\Midi.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="ANL-Combined.csproj">
@@ -105,12 +108,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\MidiJack-master\Assets\MidiJack\Editor\MidiJackWindow.cs" />
     <Compile Include="Assets\SocketIO\JSONObject\Editor\JSONChecker.cs" />
     <Compile Include="Assets\sfg\Editor\CrossPlatformInput\CrossPlatformInputInitialize.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\MidiJack-master\ProjectSettings\ProjectVersion.txt" />
     <None Include="Assets\SocketIO\JSONObject\readme.txt" />
     <None Include="Assets\SocketIO\Readme.txt" />
+    <None Include="Assets\midi-dot-net_1.1.0\Midi.xml" />
+    <None Include="Assets\midi-dot-net_1.1.0\README.txt" />
     <None Include="Assets\sfg\Standard Assets\CrossPlatformInput\CrossPlatformInputGuidelines.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

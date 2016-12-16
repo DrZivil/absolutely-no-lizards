@@ -29,9 +29,16 @@ io.on('connection', function(socket){
     socket.on('curr energy', function(msg){
         io.emit('curr energy', msg);
     });
-	socket.on('curr energy pic', function(msg){
-	    //console.log('test: ', msg);
-        io.emit('test', msg);
+	socket.on('pic energy', function(msg){
+	    //console.log('curr energy pic: ', msg);
+        io.emit('pic energy', {"val": msg});
+    });
+    socket.on('shake pic', function(){
+        //console.log('shake pic');
+        io.emit('shake pic');
+    });
+    socket.on('hide bars', function(){
+       io.emit('hide bars');
     });
     socket.on('energy up', function(msg){
         io.emit('energy up', msg);
