@@ -47,11 +47,6 @@ public class TestSocketIO : MonoBehaviour
 		StartCoroutine("BeepBoop");
 	}
 
-    void Update() {
-        //Debug.Log("energy down");
-        socket.Emit("energy down");
-    }
-
 	private IEnumerator BeepBoop()
 	{
 		// wait 1 seconds and continue

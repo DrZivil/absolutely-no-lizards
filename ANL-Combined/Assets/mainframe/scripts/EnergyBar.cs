@@ -3,12 +3,11 @@ using System.Collections;
 using UnityEngine.UI;
 using System.IO.Ports;
 using SocketIO;
-using WiimoteApi;
 
 using UnityEngine.SceneManagement;
 
 public class EnergyBar : MonoBehaviour
-    {
+{
 
     public GameObject energyBar;
     public GameObject[] slaveEnergyBars;
@@ -51,8 +50,6 @@ public class EnergyBar : MonoBehaviour
     private GameObject curr_slave_bar;
     private int prev_bars_down = 0;
 
-    Wiimote theRemote;
-
     SerialPort sp = new SerialPort("COM4", 9600);
 
     private SocketIOComponent socket;
@@ -61,12 +58,17 @@ public class EnergyBar : MonoBehaviour
     private float nextUpdate = 0.1f;
 
     // Use this for initialization
-    void Start ()
-    { 
-        InitWiimotes();
+    void Start()
+    {
 
-        InitSocketIO();
-        ConnectArduino();
+        GameObject go = GameObject.Find("SocketIO");
+        socket = go.GetComponent<SocketIOComponent>();
+        StartCoroutine(InitSocketIO());
+        socket.On("franz", OnFranz);
+        socket.On("huaba", OnHuaba);
+        socket.On("count", OnCount);
+
+        //ConnectArduino();
 
         //InvokeRepeating("setEnergyBar", 1f, repeat_rate);
         curr_slave_bar = slaveEnergyBars[slave_index];
@@ -77,39 +79,29 @@ public class EnergyBar : MonoBehaviour
         energyBar.transform.localScale = new Vector3(this.transform.localScale.x, curr_energy, this.transform.localScale.z);
     }
 
+    private void OnCount(SocketIOEvent e)
+    {
+        Debug.Log("count oida: " + e.data);
+    }
+
+    private void OnHuaba(SocketIOEvent e)
+    {
+        Debug.Log("Huaba Bau du oide Sau" + e.data);
+    }
+
     public void RestartLevel()
     {
         SceneManager.LoadScene("Lizard Interface", LoadSceneMode.Single);
     }
 
 
-    //init wiimotes
-    void InitWiimotes()
-    {
-        WiimoteManager.FindWiimotes(); // Poll native bluetooth drivers to find Wiimotes
-        //Debug.Log(WiimoteManager.Wiimotes);
-        foreach (Wiimote remote in WiimoteManager.Wiimotes)
-        {
-            Debug.Log("remotes da");
-            remote.SendPlayerLED(true, false, true, false);
-            theRemote = remote;
-        }
-    }
-    void FinishedWithWiimotes()
-    {
-        foreach (Wiimote remote in WiimoteManager.Wiimotes)
-        {
-            WiimoteManager.Cleanup(remote);
-        }
-    }
-
     // Update is called once per frame
-    void Update ()
+    void Update()
     {
         if (!gameOver)
         {
 
-            socketEvents();
+            //socketEvents();
             //Debug.Log("time: " + Time.time);
             //if (Time.time > nextUpdate)
             //{
@@ -119,7 +111,7 @@ public class EnergyBar : MonoBehaviour
             //}
 
             keyEvents();
-            ArduinoEvents();
+            //ArduinoEvents();
 
             if (allBarsDown())
             {
@@ -131,33 +123,19 @@ public class EnergyBar : MonoBehaviour
         }
     }
 
-    void slowUpdate()
+    IEnumerator InitSocketIO()
     {
-        socketEvents();
-    }
-
-    void InitSocketIO()
-    {
-        GameObject go = GameObject.Find("SocketIO");
-        socket = go.GetComponent<SocketIOComponent>();
+        yield return new WaitForSeconds(0.5f);
+        socket.Emit("client connected");
 
         //socket.On("open", TestOpenSocket);
         //socket.On("error", TestErrorSocket);
         //socket.On("close", TestCloseSocket);
     }
 
-    public void TestOpenSocket(SocketIOEvent e)
+    private void OnFranz(SocketIOEvent evt)
     {
-        Debug.Log("[SocketIO] Open received: " + e.name + " " + e.data);
-    }
-    public void TestErrorSocket(SocketIOEvent e)
-    {
-        Debug.Log("[SocketIO] Error received: " + e.name + " " + e.data);
-    }
-
-    public void TestCloseSocket(SocketIOEvent e)
-    {
-        Debug.Log("[SocketIO] Close received: " + e.name + " " + e.data);
+        Debug.Log("franz has called " + evt.data);
     }
 
 
@@ -240,7 +218,7 @@ public class EnergyBar : MonoBehaviour
         }
 
         // If one Bar goes down send a signal to Arduino
-        if(prev_bars_down < k)
+        if (prev_bars_down < k)
         {
             sp.WriteLine("buzz_down");
             sp.BaseStream.Flush();
@@ -266,27 +244,27 @@ public class EnergyBar : MonoBehaviour
             {
                 int mappingNr = sp.ReadByte();
 
-                   // Debug.Log(mappingNr);
+                // Debug.Log(mappingNr);
 
                 if (mappingNr == 8 && Time.time > nextFireTV)
-                 {
+                {
                     nextFireTV = Time.time + fireRateTV;
                     TVRemoteEnergyBar.GetComponent<EnergyBarRiddle>().setEnergyBarManual();
                 }
-                if(mappingNr == 5 && Time.time > nextFireMoney)
+                if (mappingNr == 5 && Time.time > nextFireMoney)
                 {
                     nextFireMoney = Time.time + fireRateMoney;
                     MoneyReaderEnergyBar.GetComponent<EnergyBarRiddle>().setEnergyBarManual();
                 }
-                if(mappingNr == 3)
+                if (mappingNr == 3)
                 {
                     ActivateBarNumber(mappingNr);
                 }
-                if(mappingNr == 10 || mappingNr == 20 || mappingNr == 30 || mappingNr == 40)
+                if (mappingNr == 10 || mappingNr == 20 || mappingNr == 30 || mappingNr == 40)
                 {
                     switchBars(mappingNr / 10);
                 }
-                if(mappingNr == 17)
+                if (mappingNr == 17)
                 {
                     //Debug.Log("bring down one");
                     FakeWiiEnergyBar.GetComponent<EnergyBarRiddle>().setEnergyBarManual();
@@ -314,11 +292,11 @@ public class EnergyBar : MonoBehaviour
     {
         //Debug.Log(number);
 
-        if(!slaveEnergyBars[slave_index].GetComponent<EnergyBarRiddle>().isActive)
+        if (!slaveEnergyBars[slave_index].GetComponent<EnergyBarRiddle>().isActive)
         {
             int sendNumber = slave_index + 4;
             float stage = slaveEnergyBars[slave_index].GetComponent<EnergyBarRiddle>().stage;
-            if(stage > 0.1)
+            if (stage > 0.1)
             {
                 slaveEnergyBars[slave_index].GetComponent<EnergyBarRiddle>().stage = stage - 0.1f;
                 stage = stage - 0.1f;
@@ -364,7 +342,7 @@ public class EnergyBar : MonoBehaviour
 
     void switchBars(int barNumber)
     {
-        if(currWheelIndex != barNumber)
+        if (currWheelIndex != barNumber)
         {
             slave_index = (barNumber - 1) % slaveEnergyBars.Length;
             int j = 0;
@@ -400,10 +378,10 @@ public class EnergyBar : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space) && !oneBarDown())
         {
             float currScaleY = energyBar.transform.localScale.y + main_charge_rate;
-            if(currScaleY > 1)
+            if (currScaleY > 1)
             {
                 currScaleY = 1;
-            }   
+            }
             energyBar.transform.localScale = new Vector3(this.transform.localScale.x, currScaleY, this.transform.localScale.z);
         }
 
@@ -414,12 +392,12 @@ public class EnergyBar : MonoBehaviour
             int j = 0;
             if (!slaveEnergyBars[slave_index].GetComponent<EnergyBarRiddle>().isActive)
             {
-                while(!slaveEnergyBars[slave_index].GetComponent<EnergyBarRiddle>().isActive && j < slaveEnergyBars.Length)
+                while (!slaveEnergyBars[slave_index].GetComponent<EnergyBarRiddle>().isActive && j < slaveEnergyBars.Length)
                 {
-                    slave_index  = (slave_index + 1) % slaveEnergyBars.Length;
+                    slave_index = (slave_index + 1) % slaveEnergyBars.Length;
                     j++;
                 }
-                if(j == slaveEnergyBars.Length)
+                if (j == slaveEnergyBars.Length)
                 {
                     //Debug.Log("Lizard Time is over");
                     gameOver = true;
@@ -430,7 +408,7 @@ public class EnergyBar : MonoBehaviour
             GameObject curr_slave_bg = curr_slave_bar.GetComponent<EnergyBarRiddle>().border;
 
             // reset Border of other Bars
-            for(int i = 0 ; i < slaveEnergyBars.Length; i++)
+            for (int i = 0; i < slaveEnergyBars.Length; i++)
             {
                 GameObject other_bg = slaveEnergyBars[i].GetComponent<EnergyBarRiddle>().border;
                 other_bg.GetComponent<Image>().color = Color.black;
@@ -447,7 +425,7 @@ public class EnergyBar : MonoBehaviour
 
             // remove consumed energy from Main Energy Bar
             float new_main_energy = energyBar.transform.localScale.y - (1 - curr_slave_energy.transform.localScale.y);
-            if(new_main_energy < 0)
+            if (new_main_energy < 0)
             {
                 new_main_energy = 0;
             }

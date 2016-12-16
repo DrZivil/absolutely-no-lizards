@@ -123,6 +123,9 @@
 	socket.on('curr energy pic', function(val){
         console.log(val);
     });
+    socket.on('franz', function(val){
+        console.log("franz");
+    });
 
     function updateEnergy(val){
         var opacity = val;
