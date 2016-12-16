@@ -26,13 +26,18 @@ public class EnergyBarRiddle : MonoBehaviour
 
     public float stage = 1;
 
+    public GameObject mainEnergyBar;
+    private EnergyBar mainEb;
+    public float fireRate;
+    private float lastFireTime;
+
 
     // Use this for initialization
     void Start ()
     {
         curr_energy = 1f;
         isActive = true;
-        InvokeRepeating("setEnergyBar", 0, 0.2f);
+        mainEb = mainEnergyBar.GetComponent<EnergyBar>();
 	}
 
     public float getCurrEnergy()
@@ -45,7 +50,12 @@ public class EnergyBarRiddle : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-
+        //Debug.Log("gameStarted riddle bar" + mainEb.gameStarted);
+        if (mainEb.gameStarted && Time.time > fireRate + lastFireTime)
+        {
+            setEnergyBar();
+            lastFireTime = Time.time;
+        }
     }
 
     public void setCurrEnergy(float energy)

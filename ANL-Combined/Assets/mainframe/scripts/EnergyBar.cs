@@ -9,6 +9,8 @@ using UnityEngine.SceneManagement;
 public class EnergyBar : MonoBehaviour
 {
 
+    public bool gameStarted = false;
+
     public GameObject energyBar;
     public GameObject[] slaveEnergyBars;
     public GameObject TVRemoteEnergyBar;
@@ -50,6 +52,9 @@ public class EnergyBar : MonoBehaviour
     private GameObject curr_slave_bar;
     private int prev_bars_down = 0;
 
+    private int gameMasterToGameRatio = 5000;
+    private int gameMasterToGameRatioActive = 1000;
+
     SerialPort sp = new SerialPort("COM4", 9600);
 
     private SocketIOComponent socket;
@@ -60,13 +65,16 @@ public class EnergyBar : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        Debug.Log("init Stuff");
+        string test = "42";
+        Debug.Log(test);
+        float testFloat = float.Parse(test);
+        Debug.Log(testFloat);
 
         GameObject go = GameObject.Find("SocketIO");
         socket = go.GetComponent<SocketIOComponent>();
-        StartCoroutine(InitSocketIO());
-        socket.On("franz", OnFranz);
-        socket.On("huaba", OnHuaba);
-        socket.On("count", OnCount);
+
+        SocketIOListeners();
 
         //ConnectArduino();
 
@@ -79,14 +87,23 @@ public class EnergyBar : MonoBehaviour
         energyBar.transform.localScale = new Vector3(this.transform.localScale.x, curr_energy, this.transform.localScale.z);
     }
 
-    private void OnCount(SocketIOEvent e)
+    public void SocketIOListeners()
     {
-        Debug.Log("count oida: " + e.data);
+        socket.On("start game", StartGame);
+        socket.On("reset game", ResetGame);
+        socket.On("update", updateVariables);
     }
 
-    private void OnHuaba(SocketIOEvent e)
+    public void StartGame(SocketIOEvent e)
     {
-        Debug.Log("Huaba Bau du oide Sau" + e.data);
+        Debug.Log("Game Started");
+        gameStarted = true;
+    }
+
+    public void ResetGame(SocketIOEvent e)
+    {
+        Debug.Log("Reset Game");
+        SceneManager.LoadScene("Lizard Interface", LoadSceneMode.Single);
     }
 
     public void RestartLevel()
@@ -94,21 +111,40 @@ public class EnergyBar : MonoBehaviour
         SceneManager.LoadScene("Lizard Interface", LoadSceneMode.Single);
     }
 
+    private void updateVariables(SocketIOEvent e)
+    {
+        //string text = e.data["passiveMON"].ToString().Replace("\"", "");
+        //float passiveMONval = float.Parse(text);
+        Debug.Log("update variables: " + getFloat(e.data["passiveMON"].ToString()));
+        MoneyReaderEnergyBar.GetComponent<EnergyBarRiddle>().decreaseAmount = getFloat(e.data["passiveMON"].ToString()) / gameMasterToGameRatio;
+        MoneyReaderEnergyBar.GetComponent<EnergyBarRiddle>().decreaseAmountManual = getFloat(e.data["activeMON"].ToString()) / gameMasterToGameRatioActive;
+        TVRemoteEnergyBar.GetComponent<EnergyBarRiddle>().decreaseAmount = getFloat(e.data["passiveTV"].ToString()) / gameMasterToGameRatio;
+        TVRemoteEnergyBar.GetComponent<EnergyBarRiddle>().decreaseAmountManual = getFloat(e.data["activeTV"].ToString()) / gameMasterToGameRatioActive;
+        FakeWiiEnergyBar.GetComponent<EnergyBarRiddle>().decreaseAmount = getFloat(e.data["passivePIC"].ToString()) / gameMasterToGameRatio;
+        FakeWiiEnergyBar.GetComponent<EnergyBarRiddle>().decreaseAmountManual = getFloat(e.data["activePIC"].ToString()) / gameMasterToGameRatioActive;
+        FakeStreetEnergyBar.GetComponent<EnergyBarRiddle>().decreaseAmount = getFloat(e.data["passiveBEU"].ToString()) / gameMasterToGameRatio;
+        FakeStreetEnergyBar.GetComponent<EnergyBarRiddle>().decreaseAmountManual = getFloat(e.data["activeBEU"].ToString()) / gameMasterToGameRatioActive;
+        BeatEmUpEnergyBar.GetComponent<EnergyBarRiddle>().decreaseAmount = getFloat(e.data["passiveBEU"].ToString()) / gameMasterToGameRatio;
+        BeatEmUpEnergyBar.GetComponent<EnergyBarRiddle>().decreaseAmountManual = getFloat(e.data["activeBEU"].ToString()) / gameMasterToGameRatioActive;
+        main_charge_rate = getFloat(e.data["lizardCharge"].ToString()) / 1000;
+    }
+
+    public float getFloat(string str)
+    {
+        float value;
+        value = float.Parse(str.Replace("\"", ""));
+        return value;
+    }
+
 
     // Update is called once per frame
     void Update()
     {
-        if (!gameOver)
+        //Debug.Log(gameStarted);
+        if (!gameOver && gameStarted)
         {
 
             //socketEvents();
-            //Debug.Log("time: " + Time.time);
-            //if (Time.time > nextUpdate)
-            //{
-            //    slowUpdate();
-            //    Debug.Log("next update: " + nextUpdate);
-            //    nextUpdate = Time.time + nextUpdate;
-            //}
 
             keyEvents();
             //ArduinoEvents();
@@ -117,27 +153,12 @@ public class EnergyBar : MonoBehaviour
             {
                 gameOver = true;
                 Debug.Log("Game over Bro");
-                resetButton.SetActive(true);
+                socket.Emit("game over");
+                //resetButton.SetActive(true);
                 OnApplicationQuit();
             }
         }
     }
-
-    IEnumerator InitSocketIO()
-    {
-        yield return new WaitForSeconds(0.5f);
-        socket.Emit("client connected");
-
-        //socket.On("open", TestOpenSocket);
-        //socket.On("error", TestErrorSocket);
-        //socket.On("close", TestCloseSocket);
-    }
-
-    private void OnFranz(SocketIOEvent evt)
-    {
-        Debug.Log("franz has called " + evt.data);
-    }
-
 
     void socketEvents()
     {
@@ -147,7 +168,7 @@ public class EnergyBar : MonoBehaviour
         float currEnergyPic = GameObject.Find("Slave Energybar - Picture Frame").transform.GetComponent<EnergyBarRiddle>().getCurrEnergy();
         JSONObject currEnergyPicJson = new JSONObject(currEnergyPic);
         JSONObject currEnergyJson = new JSONObject(currEnergy);
-        Debug.Log("Socket Events");
+        //Debug.Log("Socket Events");
         socket.Emit("curr energy", currEnergyJson);
         socket.Emit("curr energy pic", currEnergyPicJson);
     }

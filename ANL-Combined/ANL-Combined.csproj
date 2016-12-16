@@ -165,8 +165,6 @@
     <Compile Include="Assets\mainframe\scripts\DisplayScript.cs" />
     <Compile Include="Assets\mainframe\scripts\EnergyBar.cs" />
     <Compile Include="Assets\mainframe\scripts\EnergyBarRiddle.cs" />
-    <Compile Include="Assets\mainframe\scripts\MiniGamePictureFrame.cs" />
-    <Compile Include="Assets\mainframe\scripts\networkServer.cs" />
     <Compile Include="Assets\sfg\Scripts\GuardLogic.cs" />
     <Compile Include="Assets\sfg\Scripts\MS_Orc.cs" />
     <Compile Include="Assets\sfg\Scripts\MS_Player.cs" />

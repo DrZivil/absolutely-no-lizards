@@ -1,0 +1,517 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <title>Gamemaster</title>
+</head>
+<body>
+
+<style>
+    .col-xs-6 {
+        margin-bottom: 15px;
+    }
+    .col-md-3 {
+        border-left: 1px solid #eee;
+    }
+    .input-group input.form-control {
+        width: 20%;
+        height: 33.18px;
+    }
+    h2 span {
+        text-transform: uppercase;
+        font-size: 14px;
+        font-weight: 700;
+    }
+    p {
+        margin-top: 30px;
+    }
+    .btn {
+        transition: all 500ms;
+        border-radius: 0px;
+    }
+    .btn:hover {
+        background-color: transparent;
+        outline: none;
+        border-radius: 15px;
+    }
+    .btn:focus,
+    .btn:active:focus {
+        outline: none;
+        background-color: transparent;
+        border-radius: 15px;
+    }
+
+    .btn-time {
+        cursor: default;
+        border: 1px solid #ccc;
+    }
+    .btn-time:hover {
+        background-color: #eee;
+        outline: none;
+        border-radius: 0;
+    }
+    /*[type="number"]{*/
+        /*font-size: 22px;*/
+    /*}*/
+</style>
+
+<div class="container">
+    <div class="row">
+        <div class="col-xs-6">
+            <h2>Absolutely no lizards. <span>Gamemaster Settings</span></h2>
+        </div>
+        <div class="col-xs-6">
+            <p>Push values directly to the corresponding mini games.</p>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <form>
+            <div class="col-xs-12 col-md-9">
+                <div class="row">
+                    <div class="col-xs-6">
+                        <h5>Active Beat Em Up Value</h5>
+                        <div class="input-group">
+                            <input type="number" class="form-control" value="10" placeholder="float value" name="activeBEU" id="activeBEU" />
+                        </div>
+                    </div>
+
+                    <div class="col-xs-6">
+                        <h5>Passive Beat Em Up Value</h5>
+                        <div class="input-group">
+                            <input type="number" class="form-control" value="0" placeholder="float value" name="passiveBEU" id="passiveBEU" />
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-xs-6">
+                        <h5>Active Picture Value</h5>
+                        <div class="input-group">
+                            <input type="number" class="form-control" value="10" placeholder="float value" name="activePIC" id="activePIC" />
+                        </div>
+                    </div>
+
+                    <div class="col-xs-6">
+                        <h5>Passive Picture Value</h5>
+
+                        <div class="input-group">
+                            <input type="number" class="form-control" value="5" placeholder="float value" name="passivePIC" id="passivePIC" />
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-xs-6">
+                        <h5>Active TV Value</h5>
+
+                        <div class="input-group">
+                            <input type="number" class="form-control" value="10" placeholder="float value" name="activeTV" id="activeTV" />
+                        </div>
+                    </div>
+
+                    <div class="col-xs-6">
+                        <h5>Passive TV Value</h5>
+
+                        <div class="input-group">
+                            <input type="number" class="form-control" value="5" placeholder="float value" name="passiveTV" id="passiveTV" />
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-xs-6">
+                        <h5>Active Money Value</h5>
+
+                        <div class="input-group">
+                            <input type="number" class="form-control" value="10000" placeholder="float value" name="activeMON" id="activeMON" />
+                        </div>
+                    </div>
+
+                    <div class="col-xs-6">
+                        <h5>Passive Money Value</h5>
+
+                        <div class="input-group">
+                            <input type="number" class="form-control" value="5" placeholder="float value" name="passiveMON" id="passiveMON" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-6">
+                        <h5>Lizward Charge Value</h5>
+
+                        <div class="input-group">
+                            <input type="number" class="form-control" value="2" placeholder="float value" name="lizardCharge" id="lizardCharge" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <div class="col-xs-12 col-md-3">
+            <div class="row">
+                <div class="col-xs-12">
+                    <h5>Start Game</h5>
+
+                    <button type="button" class="btn btn-default btn-lg" id="startGame">Start Game</button>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-xs-6">
+                    <div class="btn btn-time">
+                        <span id="sw_m">00</span>:
+                        <span id="sw_s">00</span>:
+                        <span id="sw_ms">00</span>
+                    </div>
+                </div>
+                <div class="col-xs-6">
+                    <button type="button" class="btn btn-default" id="sw_pause"> II </button>
+                    <button type="button" class="btn btn-default" id="sw_stop"> X </button>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="row">
+                <div class="col-xs-6">
+                    <h5>Reset values</h5>
+
+                    <button type="button" class="btn btn-default" id="resetValues">Reset Values</button>
+                </div>
+                <div class="col-xs-6">
+                    <h5>Reset Game</h5>
+
+                    <button type="button" class="btn btn-default" id="resetGame" disabled="true">Reset Game</button>
+                </div>
+            </div>
+            <hr>
+
+        </div>
+    </div>
+
+</div>
+
+
+
+</body>
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+
+<script>
+    $(document).ready(function() {
+        (function($){
+            // socket io
+            var socket = io();
+
+            // Global buttons
+            var resetValues = $('#resetValues');
+            var resetGame = $('#resetGame');
+            var startGame   = $('#startGame');
+
+            // reset all values to default values
+            resetValues.click(function() {
+
+                $("form")[0].reset();
+                sendUpdateValues();
+            });
+
+            // start game from beginning
+            startGame.click(function() {
+                $.APP.startTimer('sw');
+                sendUpdateValues();
+                socket.emit('start game');
+                $(this).prop('disabled', true);
+                $('#resetGame').prop('disabled', false);
+            });
+
+            // reset game to start
+            resetGame.click(function() {
+                socket.emit('reset game');
+                $.APP.stopTimer('sw');
+                $("form")[0].reset();
+                $(this).prop('disabled', true);
+                $('#startGame').prop('disabled', false);
+            });
+
+            // Push values on change of ANY active or passive field
+            $('input').change(function () {
+                console.log("change");
+                sendUpdateValues();
+            });
+
+            // Stop and save time + name to json file.
+            socket.on('game over', function() {
+                $('#sw_stop').click(function() {
+                    $.APP.stopTimer();
+                });
+
+                saveToFile();
+            });
+
+            function sendUpdateValues(){
+                socket.emit('update', {
+                    "activeBEU" : $('#activeBEU').val(),
+                    "activePIC" : $('#activePIC').val(),
+                    "activeTV" : $('#activeTV').val(),
+                    "activeMON" : $('#activeMON').val(),
+                    "passiveBEU" : $('#passiveBEU').val(),
+                    "passivePIC" : $('#passivePIC').val(),
+                    "passiveTV" : $('#passiveTV').val(),
+                    "passiveMON" : $('#passiveMON').val(),
+                    "lizardCharge" : $('#lizardCharge').val()
+                });
+            }
+
+            function saveToFile() {
+                var savedTime = $('#sw_m') + ":" + $('#sw_s') + ":" + $('#sw_ms');
+
+                var name = prompt("Enter your name!");
+
+                $.ajax
+                ({
+                    type: "GET",
+                    dataType : 'json',
+                    async: false,
+                    url: 'localhost:3000',
+                    data: { data: JSON.stringify(name + ": " + savedTime) },
+                    success: function () { alert("Saved!"); },
+                    failure: function() { alert("Error!");}
+                });
+            }
+
+
+            // Pause / En-Pause Button
+            var swap = true;
+            $('#sw_pause').click(function() {
+                if(swap) {
+                    $.APP.pauseTimer();
+                    $('#sw_pause').prop('value', '->');
+                    swap = false;
+                } else {
+                    $.APP.startTimer('sw');
+                    $('#sw_pause').val('value', 'II');
+                    swap = true;
+                }
+            });
+
+            $('#sw_stop').click(function() {
+                $.APP.stopTimer();
+                $('#startGame').prop('disabled', false);
+            });
+
+            $.extend({
+                APP : {
+
+                    formatTimer : function(a) {
+                        if (a < 10) {
+                            a = '0' + a;
+                        }
+                        return a;
+                    },
+
+                    startTimer : function(dir) {
+
+                        var a;
+
+                        // save type
+                        $.APP.dir = dir;
+
+                        // get current date
+                        $.APP.d1 = new Date();
+
+                        switch($.APP.state) {
+
+                            case 'pause' :
+
+                                // resume timer
+                                // get current timestamp (for calculations) and
+                                // substract time difference between pause and now
+                                $.APP.t1 = $.APP.d1.getTime() - $.APP.td;
+
+                                break;
+
+                            default :
+
+                                // get current timestamp (for calculations)
+                                $.APP.t1 = $.APP.d1.getTime();
+
+                                // if countdown add ms based on seconds in textfield
+                                if ($.APP.dir === 'cd') {
+                                    $.APP.t1 += parseInt($('#cd_seconds').val())*1000;
+                                }
+
+                                break;
+
+                        }
+
+                        // reset state
+                        $.APP.state = 'alive';
+                        $('#' + $.APP.dir + '_status').html('Running');
+
+                        // start loop
+                        $.APP.loopTimer();
+
+                    },
+
+                    pauseTimer : function() {
+
+                        // save timestamp of pause
+                        $.APP.dp = new Date();
+                        $.APP.tp = $.APP.dp.getTime();
+
+                        // save elapsed time (until pause)
+                        $.APP.td = $.APP.tp - $.APP.t1;
+
+                        // change button value
+                        $('#' + $.APP.dir + '_start').val('Resume');
+
+                        // set state
+                        $.APP.state = 'pause';
+                        $('#' + $.APP.dir + '_status').html('Paused');
+
+                    },
+
+                    stopTimer : function() {
+
+                        // change button value
+                        $('#' + $.APP.dir + '_start').val('Restart');
+
+                        // set state
+                        $.APP.state = 'stop';
+                        $('#' + $.APP.dir + '_status').html('Stopped');
+
+                    },
+
+                    resetTimer : function() {
+
+                        // reset display
+                        $('#' + $.APP.dir + '_ms,#' + $.APP.dir + '_s,#' + $.APP.dir + '_m,#' + $.APP.dir + '_h').html('00');
+
+                        // change button value
+                        $('#' + $.APP.dir + '_start').val('Start');
+
+                        // set state
+                        $.APP.state = 'reset';
+                        $('#' + $.APP.dir + '_status').html('Reset & Idle again');
+
+                    },
+
+                    endTimer : function(callback) {
+
+                        // change button value
+                        $('#' + $.APP.dir + '_start').val('Restart');
+
+                        // set state
+                        $.APP.state = 'end';
+
+                        // invoke callback
+                        if (typeof callback === 'function') {
+                            callback();
+                        }
+
+                    },
+
+                    loopTimer : function() {
+
+                        var td;
+                        var d2,t2;
+
+                        var ms = 0;
+                        var s  = 0;
+                        var m  = 0;
+                        var h  = 0;
+
+                        if ($.APP.state === 'alive') {
+
+                            // get current date and convert it into
+                            // timestamp for calculations
+                            d2 = new Date();
+                            t2 = d2.getTime();
+
+                            // calculate time difference between
+                            // initial and current timestamp
+                            if ($.APP.dir === 'sw') {
+                                td = t2 - $.APP.t1;
+                                // reversed if countdown
+                            } else {
+                                td = $.APP.t1 - t2;
+                                if (td <= 0) {
+                                    // if time difference is 0 end countdown
+                                    $.APP.endTimer(function(){
+                                        $.APP.resetTimer();
+                                        $('#' + $.APP.dir + '_status').html('Ended & Reset');
+                                    });
+                                }
+                            }
+
+                            // calculate milliseconds
+                            ms = td%1000;
+                            if (ms < 1) {
+                                ms = 0;
+                            } else {
+                                // calculate seconds
+                                s = (td-ms)/1000;
+                                if (s < 1) {
+                                    s = 0;
+                                } else {
+                                    // calculate minutes
+                                    var m = (s-(s%60))/60;
+                                    if (m < 1) {
+                                        m = 0;
+                                    } else {
+                                        // calculate hours
+                                        var h = (m-(m%60))/60;
+                                        if (h < 1) {
+                                            h = 0;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // substract elapsed minutes & hours
+                            ms = Math.round(ms/100);
+                            s  = s-(m*60);
+                            m  = m-(h*60);
+
+                            // update display
+                            $('#' + $.APP.dir + '_ms').html($.APP.formatTimer(ms));
+                            $('#' + $.APP.dir + '_s').html($.APP.formatTimer(s));
+                            $('#' + $.APP.dir + '_m').html($.APP.formatTimer(m));
+                            $('#' + $.APP.dir + '_h').html($.APP.formatTimer(h));
+
+                            // loop
+                            $.APP.t = setTimeout($.APP.loopTimer,1);
+
+                        } else {
+
+                            // kill loop
+                            clearTimeout($.APP.t);
+                            return true;
+
+                        }
+
+                    }
+
+                }
+            });
+
+        })(jQuery);
+
+    });
+
+</script>
+
+</html>

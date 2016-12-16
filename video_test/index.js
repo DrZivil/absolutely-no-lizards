@@ -9,11 +9,15 @@ app.use(express.static(__dirname + '/public'));
 app.get('/', function(req, res){
     res.sendFile(__dirname + '/index.html');
 });
-app.get('/test', function(req, res){
-    res.sendFile(__dirname + '/test.html');
+
+app.get('/gamemaster', function(req, res) {
+    res.sendFile(__dirname + '/gamemaster.html');
+});
+app.get('/leaderboard', function(req, res) {
+    res.sendFile(__dirname + '/leaderboard.html');
 });
 
-// io.on('connection', function(socket){
+// io.on('connection', function(socket) {
 //     console.log('a user connected');
 // });
 
@@ -22,16 +26,6 @@ http.listen(3000, function(){
 });
 
 io.on('connection', function(socket){
-    socket.on('count', function(msg){
-        console.log("counting", msg);
-        io.emit('count', msg);
-    });
-
-    socket.on('client connected', function(msg){
-        console.log("Client has connected", msg);
-        io.emit('unity connected', msg);
-    });
-
     socket.on('curr energy', function(msg){
         io.emit('curr energy', msg);
     });
@@ -44,5 +38,20 @@ io.on('connection', function(socket){
     });
     socket.on('energy down', function(msg){
         io.emit('energy down', msg);
+    });
+    socket.on('update', function (msg) {
+        console.log("update Values");
+        io.emit('update', msg);
+    });
+    socket.on('reset game', function () {
+        console.log("reset game");
+        io.emit('reset game');
+    });
+    socket.on('start game', function () {
+        console.log("start game");
+        io.emit('start game');
+    });
+    socket.on('game over', function () {
+        io.emit('game over');
     });
 });
