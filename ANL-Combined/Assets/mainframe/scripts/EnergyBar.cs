@@ -80,8 +80,15 @@ public class EnergyBar : MonoBehaviour
     private int yellow = 62;
     private int off = 0;
 
-
     OutputDevice outputDevice;
+
+    public AudioClip alertSound;
+    public AudioClip alertVoice;
+
+    AudioSource mainAudio;
+    public bool playAudio;
+
+    private bool launchpadError;
 
     // Use this for initialization
     void Start()
@@ -90,17 +97,24 @@ public class EnergyBar : MonoBehaviour
         GameObject go = GameObject.Find("SocketIO");
         socket = go.GetComponent<SocketIOComponent>();
 
-        outputDevice = OutputDevice.InstalledDevices[1];
-        if (outputDevice.IsOpen) outputDevice.Close();
-        if (!outputDevice.IsOpen) outputDevice.Open();
+        mainAudio = GetComponent<AudioSource>();
 
-        LightLaunchpad();
+       // Debug.Log(OutputDevice.InstalledDevices.Count);
+        // Launchpad Stuff
+        if(OutputDevice.InstalledDevices.Count > 1)
+        {
+            outputDevice = OutputDevice.InstalledDevices[1];
+            //Debug.Log(outputDevice.Name);
+            if (outputDevice.IsOpen) outputDevice.Close();
+            if (!outputDevice.IsOpen) outputDevice.Open();
+            LightLaunchpad();
+        }
 
         SocketIOListeners();
 
         //ConnectArduino();
 
-        //InvokeRepeating("setEnergyBar", 1f, repeat_rate);
+        // InvokeRepeating("setEnergyBar", 1f, repeat_rate);
         curr_slave_bar = slaveEnergyBars[slave_index];
 
         // Initial Border Color for first Bar
@@ -111,10 +125,10 @@ public class EnergyBar : MonoBehaviour
 
     public void LightLaunchpad()
     {
-        outputDevice.SendNoteOn(Channel.Channel1, Pitch.CNeg1, yellow);
-        outputDevice.SendNoteOn(Channel.Channel1, Pitch.CSharpNeg1, yellow);
-        outputDevice.SendNoteOn(Channel.Channel1, Pitch.DNeg1, yellow);
-        outputDevice.SendNoteOn(Channel.Channel1, Pitch.DSharpNeg1, yellow);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)0, yellow);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)1, yellow);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)8, yellow);
+
     }
 
     public void SocketIOListeners()
@@ -184,8 +198,6 @@ public class EnergyBar : MonoBehaviour
     void Update()
     {
 
-        keyColorEvents();
-
         //Debug.Log(gameStarted);
         if (!gameOver && gameStarted)
         {
@@ -225,7 +237,6 @@ public class EnergyBar : MonoBehaviour
         JSONObject currEnergyJson = new JSONObject(currEnergy);
         socket.Emit("curr energy", currEnergyJson);
 
-
         emitPictureFrame = WaitAndEmitPictureFrame(0.1f);
         StartCoroutine(emitPictureFrame);
     }
@@ -259,50 +270,10 @@ public class EnergyBar : MonoBehaviour
 
     void OnApplicationQuit()
     {
-        outputDevice.SendNoteOn(Channel.Channel1, Pitch.CNeg1, 0);
-        outputDevice.SendNoteOn(Channel.Channel1, Pitch.CSharpNeg1, 0);
-        outputDevice.SendNoteOn(Channel.Channel1, Pitch.DNeg1, 0);
-        outputDevice.SendNoteOn(Channel.Channel1, Pitch.DSharpNeg1, 0);
-
+        ClearExclamation();
 
         if (outputDevice.IsOpen) outputDevice.Close();
-        sp.Close();
-    }
-
-    public void keyColorEvents()
-    {
-        if (MidiMaster.GetKeyUp(0))
-        {
-            outputDevice.SendNoteOn(Channel.Channel1, Pitch.CNeg1, yellow);
-        }
-        if (MidiMaster.GetKeyUp(1))
-        {
-            outputDevice.SendNoteOn(Channel.Channel1, Pitch.CSharpNeg1, yellow);
-        }
-        if (MidiMaster.GetKeyUp(2))
-        {
-            outputDevice.SendNoteOn(Channel.Channel1, Pitch.DNeg1, yellow);
-        }
-        if (MidiMaster.GetKeyUp(3))
-        {
-            outputDevice.SendNoteOn(Channel.Channel1, Pitch.DSharpNeg1, yellow);
-        }
-        if (MidiMaster.GetKeyDown(0))
-        {
-            outputDevice.SendNoteOn(Channel.Channel1, Pitch.CNeg1, green);
-        }
-        if (MidiMaster.GetKeyDown(1))
-        {
-            outputDevice.SendNoteOn(Channel.Channel1, Pitch.CSharpNeg1, green);
-        }
-        if (MidiMaster.GetKeyDown(2))
-        {
-            outputDevice.SendNoteOn(Channel.Channel1, Pitch.DNeg1, green);
-        }
-        if (MidiMaster.GetKeyDown(3))
-        {
-            outputDevice.SendNoteOn(Channel.Channel1, Pitch.DSharpNeg1, green);
-        }
+        //sp.Close();
     }
 
     public bool oneBarDown()
@@ -313,20 +284,113 @@ public class EnergyBar : MonoBehaviour
         {
             if (!slaveEnergyBars[i].GetComponent<EnergyBarRiddle>().isActive)
             {
-                sp.WriteLine(i.ToString());
+                // todo: comment in after debug:
+                // sp.WriteLine(i.ToString());
                 //Debug.Log(i.ToString());
-                sp.BaseStream.Flush();
+                //sp.BaseStream.Flush();
                 k++;
             }
         }
         if (k > 0)
         {
+            if (!launchpadError)
+            {
+                launchpadErrorMode();
+                launchpadError = true;
+            }
             return true;
         }
         else
         {
+            if (launchpadError)
+            {
+                launchpadActiveMove();
+                launchpadError = false;
+            }
             return false;
         }
+    }
+
+    public void launchpadActiveMove()
+    {
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)0, yellow);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)1, yellow);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)8, yellow);
+        CancelInvoke("FLashExclamation");
+        CancelInvoke("ClearExclamation");
+        if (playAudio)
+        {
+            CancelInvoke("AlertSound");
+        }
+    }
+
+    public void launchpadErrorMode()
+    {
+        //outputDevice = OutputDevice.InstalledDevices[1];
+        //Debug.Log(outputDevice.Name);
+        //if (!outputDevice.IsOpen) outputDevice.Open();
+
+
+        InvokeRepeating("FLashExclamation", 0f, 0.5f);
+        InvokeRepeating("ClearExclamation", 0.25f, 0.5f);
+
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)0, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)1, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)8, 0);
+
+        if (playAudio)
+        {
+            InvokeRepeating("AlertSound", 0, alertSound.length + alertVoice.length);
+        }
+    }
+
+    public void ClearExclamation()
+    {
+        Debug.Log("Clear Exclamation: " + outputDevice.Name + " - isOPen: " + outputDevice.IsOpen);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)3, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)4, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)19, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)20, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)35, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)36, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)51, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)52, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)67, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)68, 0);
+
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)99, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)100, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)115, 0);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)116, 0);
+    }
+
+    public void FLashExclamation()
+    {
+        Debug.Log("Flash Exclamation: " + outputDevice.Name + " - isOPen: " + outputDevice.IsOpen);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)3, red);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)4, red);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)19, red);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)20, red);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)35, red);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)36, red);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)51, red);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)52, red);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)67, red);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)68, red);
+
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)99, red);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)100, red);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)115, red);
+        outputDevice.SendNoteOn(Channel.Channel1, (Pitch)116, red);
+    }
+
+    IEnumerator alertSounds()
+    {
+        mainAudio.clip = alertSound;
+        mainAudio.Play();
+        yield return new WaitForSeconds(alertSound.length);
+        mainAudio.clip = alertVoice;
+        mainAudio.Play();
     }
 
     public bool allBarsDown()
@@ -506,8 +570,15 @@ public class EnergyBar : MonoBehaviour
 
         // Load Main Energy Bar
         //if (Input.GetKeyDown(KeyCode.Space) && !oneBarDown())
-        if (MidiMaster.GetKeyDown(0) && !oneBarDown())
+        if (MidiMaster.GetKeyUp(0, 0) && !oneBarDown())
         {
+            outputDevice.SendNoteOn(Channel.Channel1, Pitch.CNeg1, yellow);
+
+        }
+        if (MidiMaster.GetKeyDown(0, 0) && !oneBarDown())
+            {
+            outputDevice.SendNoteOn(Channel.Channel1, Pitch.CNeg1, green);
+
             float currScaleY = energyBar.transform.localScale.y + main_charge_rate;
             if (currScaleY > 1)
             {
@@ -518,8 +589,14 @@ public class EnergyBar : MonoBehaviour
 
         // Switch through Energy Bars to charge
         //if (Input.GetKeyDown(KeyCode.Tab))
-        if (MidiMaster.GetKeyDown(1))
+        if (MidiMaster.GetKeyUp(0, 8) && !oneBarDown())
         {
+            outputDevice.SendNoteOn(Channel.Channel1, Pitch.GSharpNeg1, yellow);
+        }
+        if (MidiMaster.GetKeyDown(0, 8) && !oneBarDown())
+        {
+            outputDevice.SendNoteOn(Channel.Channel1, Pitch.GSharpNeg1, green);
+
             slave_index = (slave_index + 1) % slaveEnergyBars.Length;
             int j = 0;
             if (!slaveEnergyBars[slave_index].GetComponent<EnergyBarRiddle>().isActive)
@@ -551,8 +628,13 @@ public class EnergyBar : MonoBehaviour
 
         // Charge selected Energy Bar
         //if (Input.GetKeyDown(KeyCode.LeftShift) && curr_slave_bar.GetComponent<EnergyBarRiddle>().isActive)
-        if (MidiMaster.GetKeyDown(2) && curr_slave_bar.GetComponent<EnergyBarRiddle>().isActive)
+        if (MidiMaster.GetKeyUp(0, 1) && curr_slave_bar.GetComponent<EnergyBarRiddle>().isActive && !oneBarDown())
         {
+            outputDevice.SendNoteOn(Channel.Channel1, Pitch.CSharpNeg1, yellow);
+        }
+        if (MidiMaster.GetKeyDown(0, 1) && curr_slave_bar.GetComponent<EnergyBarRiddle>().isActive && !oneBarDown())
+        {
+            outputDevice.SendNoteOn(Channel.Channel1, Pitch.CSharpNeg1, green);
             GameObject curr_slave_energy = curr_slave_bar.GetComponent<EnergyBarRiddle>().energyBar;
             float new_energy = curr_slave_energy.transform.localScale.y + energyBar.transform.localScale.y;
 
